@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart OS · CPU Scheduler Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f3f2fb;--bg2:#e4e1f8;--card:rgba(255,255,255,.72);--bd:rgba(80,70,160,.16);--tx:#1c1a33;--mut:#6b6890;--ac:#5b43e8;--ac2:#0aa5a0;--in:rgba(255,255,255,.8)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0b1f;--bg2:#1b1442;--card:rgba(28,24,62,.62);--bd:rgba(150,140,255,.18);--tx:#ecebff;--mut:#9a97c8;--ac:#8f7bff;--ac2:#2ee6d6;--in:rgba(10,8,30,.6)}}
+:root[data-theme="dark"]{--bg:#0d0b1f;--bg2:#1b1442;--card:rgba(28,24,62,.62);--bd:rgba(150,140,255,.18);--tx:#ecebff;--mut:#9a97c8;--ac:#8f7bff;--ac2:#2ee6d6;--in:rgba(10,8,30,.6)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.55 Sora,system-ui,sans-serif;color:var(--tx);background:radial-gradient(900px 500px at 85% -10%,var(--bg2),transparent),radial-gradient(700px 500px at -10% 30%,var(--bg2),transparent),var(--bg);min-height:100vh}
+.wrap{max-width:1120px;margin:auto;padding:20px 18px 60px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:26px}
+.logo{font-weight:800;font-size:20px;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.logo i{width:30px;height:30px;border-radius:9px;background:conic-gradient(from 200deg,var(--ac),var(--ac2),var(--ac));display:grid;place-items:center;font-style:normal;color:#fff;font-size:15px}
+button{font:inherit;cursor:pointer}
+.ghost{background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:10px;padding:7px 13px;backdrop-filter:blur(10px)}
+h1{font-size:clamp(28px,5vw,46px);line-height:1.08;letter-spacing:-.035em;margin:0 0 10px;font-weight:800;max-width:15em}
+.sub{color:var(--mut);max-width:60ch;margin:0 0 26px}
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:18px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:20px;backdrop-filter:blur(16px);margin-bottom:18px}
+h2{font-size:15px;margin:0 0 14px;font-weight:600}
+table{width:100%;border-collapse:collapse;font:13px 'IBM Plex Mono',monospace}
+th{color:var(--mut);font-weight:500;text-align:left;padding:4px 4px 8px}
+td{padding:3px 3px}
+td.n{text-align:right}
+th.n{text-align:right}
+input{width:100%;min-width:44px;font:inherit;color:var(--tx);background:var(--in);border:1px solid var(--bd);border-radius:8px;padding:7px 8px;text-align:center}
+input:focus,button:focus-visible,.tab:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.x{background:none;border:0;color:var(--mut);font-size:18px;padding:0 6px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--in);padding:5px;border-radius:14px;border:1px solid var(--bd);margin-bottom:14px}
+.tab{background:none;border:0;border-radius:10px;padding:9px 4px;color:var(--mut);font-weight:600;font-size:13px}
+.tab[aria-selected=true]{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;box-shadow:0 6px 18px -6px var(--ac)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cta{flex:1;background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:600;box-shadow:0 10px 26px -10px var(--ac)}
+.cta:active{transform:scale(.98)}
+.q{display:none;align-items:center;gap:8px;color:var(--mut);font-size:13px;margin-bottom:12px}
+.q input{width:70px}
+.q.on{display:flex}
+.hint{font-size:12.5px;color:var(--mut);margin:12px 0 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+@media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--in);border:1px solid var(--bd);border-radius:14px;padding:12px}
+.stat b{display:block;font:500 24px 'IBM Plex Mono',monospace;letter-spacing:-.03em}
+.stat span{font-size:12px;color:var(--mut)}
+.scroll{overflow-x:auto}
+.gantt{display:flex;min-width:100%;height:56px;border-radius:12px;overflow:hidden;border:1px solid var(--bd)}
+.seg{display:grid;place-items:center;color:#fff;font-weight:600;font-size:13px;transform-origin:left;animation:grow .5s cubic-bezier(.2,.8,.2,1) backwards;min-width:0;border-right:1px solid rgba(255,255,255,.35)}
+@keyframes grow{from{transform:scaleX(0);opacity:0}}
+.ruler{position:relative;height:22px;margin-top:6px;font:11px 'IBM Plex Mono',monospace;color:var(--mut)}
+.ruler span{position:absolute;transform:translateX(-50%)}
+.cmp{display:grid;gap:12px}
+.cr{display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center;font-size:13px}
+.bars{display:grid;gap:4px}
+.bar{height:14px;border-radius:7px;display:flex;align-items:center;padding-left:8px;font:500 10.5px 'IBM Plex Mono',monospace;color:#fff;min-width:34px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.b1{background:var(--ac)}.b2{background:var(--ac2);color:#06302e}
+.best{color:var(--ac2);font-weight:600}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-bottom:12px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo"><i>⚙</i>Smart OS</div>
+  <button class="ghost" id="theme" aria-label="Toggle theme">Switch theme</button>
+</header>
+<h1>See how the CPU decides who runs next.</h1>
+<p class="sub">Enter your processes, pick a scheduling policy, and watch the Gantt chart and metrics update. Same workload, four algorithms, one fair comparison.</p>
+
+<div class="grid">
+<div>
+  <div class="card">
+    <h2>Processes</h2>
+    <table><thead><tr><th>ID</th><th class="n">Arrival</th><th class="n">Burst</th><th class="n">Priority</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+    <div class="row" style="margin-top:12px">
+      <button class="ghost" id="add">Add process</button>
+      <button class="ghost" id="sample">Load sample</button>
+      <button class="ghost" id="rand">Random</button>
+    </div>
+    <p class="hint">Lower priority number means higher priority. Max 50 processes.</p>
+  </div>
+  <div class="card">
+    <h2>Algorithm</h2>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="q" id="qbox">Time quantum <input id="q" type="number" min="1" value="2" aria-label="Time quantum"></div>
+    <div class="row"><button class="cta" id="run">Run simulation</button></div>
+    <p class="hint" id="desc"></p>
+  </div>
+</div>
+
+<div>
+  <div class="stats" id="stats"></div>
+  <div class="card">
+    <h2 id="gt">Gantt chart</h2>
+    <div class="legend" id="leg"></div>
+    <div class="scroll"><div style="min-width:560px"><div class="gantt" id="gantt"></div><div class="ruler" id="ruler"></div></div></div>
+  </div>
+  <div class="card">
+    <h2>Process metrics</h2>
+    <div class="scroll"><table id="res"></table></div>
+  </div>
+  <div class="card">
+    <h2>Compare all algorithms</h2>
+    <div class="legend"><span><i class="dot b1"></i>Avg waiting</span><span><i class="dot b2"></i>Avg turnaround</span></div>
+    <div class="cmp" id="cmp"></div>
+    <p class="hint" id="cnote"></p>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+const COL=['#6d5bf0','#f08a3c','#22b59a','#e0526b','#3c8df0','#c9a227','#9b59d0','#4cae4c','#e06fb0','#5f7d95'];
+const ALG=[['FCFS','First-Come-First-Served: runs processes in arrival order, never interrupts. Simple, but short jobs can get stuck behind a long one (convoy effect).'],
+['SJF','Shortest Job First (non-preemptive): among arrived processes, picks the smallest burst. Ties go to the earlier arrival, as in the C code.'],
+['Priority','Non-preemptive priority: among arrived processes, picks the lowest priority number. Low-priority jobs can starve.'],
+['Round Robin','Preemptive time sharing: each process runs up to one quantum, then goes to the back of the ready queue.']];
+let procs=[],alg=0;
+const $=id=>document.getElementById(id);
+const SAMPLE=[[0,5,2],[1,3,1],[2,8,3],[3,2,2]];
+
+function mk(a){return a.map((v,i)=>({id:'P'+(i+1),at:v[0],bt:v[1],pr:v[2]}))}
+function renderRows(){
+  $('rows').innerHTML=procs.map((p,i)=>`<tr><td><b>${p.id}</b></td>`+['at','bt','pr'].map(k=>`<td><input type="number" min="${k=='bt'?1:0}" value="${p[k]}" data-i="${i}" data-k="${k}" aria-label="${p.id} ${k}"></td>`).join('')+`<td><button class="x" data-del="${i}" aria-label="Remove ${p.id}">×</button></td></tr>`).join('');
+}
+$('rows').addEventListener('input',e=>{const t=e.target;if(t.dataset.i!=null)procs[t.dataset.i][t.dataset.k]=Math.max(t.dataset.k=='bt'?1:0,parseInt(t.value)||0)});
+$('rows').addEventListener('click',e=>{const d=e.target.dataset.del;if(d!=null&&procs.length>1){procs.splice(d,1);procs.forEach((p,i)=>p.id='P'+(i+1));renderRows();run()}});
+$('add').onclick=()=>{if(procs.length<50){procs.push({id:'P'+(procs.length+1),at:0,bt:1,pr:1});renderRows()}};
+$('sample').onclick=()=>{procs=mk(SAMPLE);renderRows();run()};
+$('rand').onclick=()=>{const n=4+Math.floor(Math.random()*3),r=m=>Math.floor(Math.random()*m);procs=mk(Array.from({length:n},()=>[r(8),1+r(9),1+r(5)]));renderRows();run()};
+
+/* ---- Scheduling engine (port of the C source) ---- */
+function addSeg(g,id,s,e){if(s==e)return;const l=g[g.length-1];if(l&&l.id==id&&l.end==s)l.end=e;else g.push({id,start:s,end:e})}
+function simulate(a,list,q){
+  const p=list.map(x=>({...x,rem:x.bt,ct:0,first:-1})),g=[];let t=0;
+  if(a==0){
+    p.sort((x,y)=>x.at-y.at);
+    p.forEach(x=>{if(t<x.at)t=x.at;x.first=t;addSeg(g,x.id,t,t+x.bt);t+=x.bt;x.ct=t});
+  }else if(a==1||a==2){
+    const used=p.map(()=>false);let done=0;
+    const key=a==1?'bt':'pr';
+    while(done<p.length){
+      let k=-1;
+      p.forEach((x,i)=>{if(!used[i]&&x.at<=t&&(k<0||x[key]<p[k][key]||(x[key]==p[k][key]&&x.at<p[k].at)))k=i});
+      if(k<0){t=Math.min(...p.filter((x,i)=>!used[i]).map(x=>x.at));continue}
+      used[k]=true;p[k].first=t;addSeg(g,p[k].id,t,t+p[k].bt);t+=p[k].bt;p[k].ct=t;done++;
+    }
+  }else{
+    const s=[...p].sort((x,y)=>x.at-y.at),Q=[];let nx=0,done=0;
+    while(done<s.length){
+      if(!Q.length&&nx<s.length&&t<s[nx].at)t=s[nx].at;
+      while(nx<s.length&&s[nx].at<=t)Q.push(s[nx++]);
+      if(!Q.length)continue;
+      const x=Q.shift();if(x.first<0)x.first=t;
+      const r=Math.min(x.rem,q);addSeg(g,x.id,t,t+r);t+=r;x.rem-=r;
+      while(nx<s.length&&s[nx].at<=t)Q.push(s[nx++]);
+      if(x.rem>0)Q.push(x);else{x.ct=t;done++}
+    }
+  }
+  p.forEach(x=>{x.tat=x.ct-x.at;x.wt=x.tat-x.bt;x.rt=x.first-x.at});
+  p.sort((x,y)=>parseInt(x.id.slice(1))-parseInt(y.id.slice(1)));
+  const n=p.length,av=k=>p.reduce((s,x)=>s+x[k],0)/n;
+  return{p,g,wt:av('wt'),tat:av('tat'),rt:av('rt'),cs:Math.max(0,g.length-1)};
+}
+
+/* ---- UI ---- */
+const color=id=>COL[(parseInt(id.slice(1))-1)%COL.length];
+const f=v=>v.toFixed(2);
+function run(){
+  const q=Math.max(1,parseInt($('q').value)||1);
+  const r=simulate(alg,procs,q);
+  $('stats').innerHTML=[['Avg waiting',f(r.wt)],['Avg turnaround',f(r.tat)],['Avg response',f(r.rt)],['Context switches',r.cs]].map(s=>`<div class="stat"><b>${s[1]}</b><span>${s[0]}</span></div>`).join('');
+  $('gt').textContent='Gantt chart · '+ALG[alg][0]+(alg==3?` (q=${q})`:'');
+  $('leg').innerHTML=procs.map(p=>`<span><i class="dot" style="background:${color(p.id)}"></i>${p.id}</span>`).join('');
+  const t0=r.g[0].start,T=r.g[r.g.length-1].end,span=T-t0;
+  let gaps='';
+  $('gantt').innerHTML=r.g.map((s,i)=>`<div class="seg" style="flex:${s.end-s.start};background:${color(s.id)};animation-delay:${i*70}ms" title="${s.id}: ${s.start}–${s.end}">${s.id}</div>`).join('');
+  const marks=[r.g[0].start,...r.g.map(s=>s.end)];
+  $('ruler').innerHTML=[...new Set(marks)].map(m=>`<span style="left:${(m-t0)/span*100}%">${m}</span>`).join('');
+  $('res').innerHTML='<thead><tr>'+['Process','AT','BT','PR','CT','TAT','WT','RT'].map((h,i)=>`<th class="${i?'n':''}">${h}</th>`).join('')+'</tr></thead><tbody>'+r.p.map(x=>`<tr><td><i class="dot" style="background:${color(x.id)}"></i>${x.id}</td>${[x.at,x.bt,x.pr,x.ct,x.tat,x.wt,x.rt].map(v=>`<td class="n">${v}</td>`).join('')}</tr>`).join('')+'</tbody>';
+  compare(q);
+}
+function compare(q){
+  const all=ALG.map((a,i)=>({n:a[0],...simulate(i,procs,q)}));
+  const mx=Math.max(...all.map(r=>Math.max(r.wt,r.tat)))||1;
+  const bw=Math.min(...all.map(r=>r.wt));
+  $('cmp').innerHTML=all.map(r=>`<div class="cr"><div class="${r.wt==bw?'best':''}">${r.n}${r.wt==bw?' ★':''}</div><div class="bars"><div class="bar b1" style="width:${Math.max(8,r.wt/mx*100)}%">${f(r.wt)}</div><div class="bar b2" style="width:${Math.max(8,r.tat/mx*100)}%">${f(r.tat)}</div></div></div>`).join('');
+  $('cnote').textContent='★ marks the lowest average waiting time for this workload. Round Robin uses the current quantum ('+q+').';
+}
+function tabs(){
+  $('tabs').innerHTML=ALG.map((a,i)=>`<button class="tab" role="tab" aria-selected="${i==alg}" data-a="${i}">${a[0]}</button>`).join('');
+  $('desc').textContent=ALG[alg][1];$('qbox').classList.toggle('on',alg==3);
+}
+$('tabs').onclick=e=>{if(e.target.dataset.a!=null){alg=+e.target.dataset.a;tabs();run()}};
+$('run').onclick=run;$('q').oninput=run;
+$('theme').onclick=()=>{const r=document.documentElement,d=r.dataset.theme?r.dataset.theme=='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.theme=d?'light':'dark'};
+procs=mk(SAMPLE);renderRows();tabs();run();
+</script>
+</body>
+</html>

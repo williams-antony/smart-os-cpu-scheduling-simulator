@@ -4,16 +4,6 @@ An interactive CPU scheduling simulator that shows how an operating system decid
 
 Mini-project for **21CSC202J - Operating Systems**, SRM Institute of Science and Technology, Ramapuram Campus, Chennai.
 
-**Live demo:** `https://<your-username>.github.io/smart-os-scheduler/`
-
-## Team
-
-| Name | Register No. |
-|---|---|
-| Williams Antony A | RA2511026020445 |
-| Joshua Peniel D | RA2511026020453 |
-
-Guide: Dr. Jananee V., Assistant Professor, CSE (AIML & AI)
 
 ## What is in this repository
 
@@ -31,8 +21,6 @@ Guide: Dr. Jananee V., Assistant Professor, CSE (AIML & AI)
 | SJF | Non-preemptive | Shortest burst among arrived processes |
 | Priority | Non-preemptive | Lowest priority number first |
 | Round Robin | Preemptive | Fixed time quantum, cyclic order |
-| SRTF | Preemptive | Least remaining time runs next |
-| Priority-P | Preemptive | Higher-priority arrival interrupts; optional aging |
 
 Ties go to the earlier arrival, then the lower process index.
 
@@ -46,9 +34,6 @@ Ties go to the earlier arrival, then the lower process index.
 - Side-by-side comparison of all six algorithms with a best-algorithm summary
 - Quantum sweep chart for Round Robin
 - "Why was this process picked?" decision log; click an entry to jump to that moment
-- Preset scenarios: convoy effect, starvation, interactive mix, idle gaps, switch overhead
-- Export to CSV, JSON and PNG; share a workload as a short text code
-- Quiz mode: predict the execution order and average waiting time
 - Light and dark themes, responsive layout
 
 ## Run the web version
@@ -84,8 +69,6 @@ Workload: P1 (AT 0, BT 5, PR 2), P2 (1, 3, 1), P3 (2, 8, 3), P4 (3, 2, 2). Round
 | SJF | 4.00 | 8.50 | 4.00 | 3 |
 | Priority | 4.25 | 8.75 | 4.25 | 3 |
 | Round Robin (q=2) | 7.25 | 11.75 | 2.00 | 8 |
-| SRTF | 3.50 | 8.00 | 2.25 | 4 |
-| Priority-P | 4.00 | 8.50 | 3.25 | 4 |
 
 Context switches count transitions between distinct execution segments; switch time is not charged unless a context-switch cost is set in the web version.
 

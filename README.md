@@ -75,12 +75,4 @@ Fonts load from Google Fonts. Without internet access the app still works and fa
 - HTML, CSS and vanilla JavaScript (single file)
 - No frameworks, no build tools
 
-## Project Structure
-```
-.
-├── smart-os-simulator.html   # the entire app
-└── README.md
-```
 
-## License
-Add a license of your choice (for example MIT) before publishing.
